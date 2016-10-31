@@ -1,53 +1,53 @@
 package apk
 
 import (
-	"os/exec"
-	"encoding/json"
-	"image"
 	"encoding/base64"
-	"strings"
+	"encoding/json"
 	"errors"
+	"image"
+	"os/exec"
+	"strings"
 )
 
 // Apk info.
 type Apk struct {
-	Name             string `json:"-"`
-	Options          *Options `json:"-"`
-	TargetSdkVersion string `json:"targetSdkVersion"`
-	PackageName      string `json:"packageName"`
-	Label            string `json:"label"`
-	AppIcon          string `json:"icon"`
-	VersionName      string `json:"versionName"`
+	Name             string  `json:"-"`
+	TargetSdkVersion string  `json:"targetSdkVersion"`
+	PackageName      string  `json:"packageName"`
+	Label            string  `json:"label"`
+	AppIcon          string  `json:"icon"`
+	VersionName      string  `json:"versionName"`
 	VersionCode      float64 `json:"versionCode"`
-	MinSdkVersion    string `json:"minSdkVersion"`
-	IconPath         string `json:"iconPath"`
+	MinSdkVersion    string  `json:"minSdkVersion"`
+	IconPath         string  `json:"iconPath"`
+
+	opts *Options
 }
 
 // Some options.
 type Options struct {
-	iconPath string
-	jar      string
+	iconPath string // TODO(ssx): unexported path
+	JarPath  string
 }
 
 const (
-	DefaultJarPath = "apk-parser.jar"
-	DefaultIconPath = "icon.png"
+	DefaultJarPath  = "apk-parser.jar"
+	DefaultIconPath = "icon.png" // TODO(ssx): default icon can be found in Manifest file
 )
 
-// New Instance.
 func New(options *Options) *Apk {
-	if options.jar == "" {
-		options.jar = DefaultJarPath
+	if options.JarPath == "" {
+		options.JarPath = DefaultJarPath
 	}
 	if options.iconPath == "" {
 		options.iconPath = DefaultIconPath
 	}
-	return &Apk{Options:options}
+	return &Apk{opts: options}
 }
 
 // Get jar path.
 func (this *Apk) getJarPackage() string {
-	return this.Options.jar
+	return this.opts.JarPath
 }
 
 // Parse information from upload apk packages.
@@ -58,8 +58,7 @@ func (this *Apk) OpenFile(apkPath string) error {
 	if err != nil {
 		return err
 	}
-	json.Unmarshal(data, this)
-	return err
+	return json.Unmarshal(data, this)
 }
 
 // Get App Icon from apk.
@@ -72,9 +71,8 @@ func (this *Apk) Icon() (image.Image, error) {
 	return im, err
 }
 
-
 // Get Apk info by json format.
 func (this *Apk) JSON() string {
-	jsonString, _ := json.Marshal(this)
-	return string(jsonString)
+	data, _ := json.Marshal(this)
+	return string(data)
 }
